@@ -367,3 +367,45 @@ def run_collection(spec: CollectionSpec, snapshots: SnapshotStore) -> RunSummary
 | 7 | 跑满 100 条 + 抽样复核 + `AI_USAGE.md` | 最后 1 小时，且必须留够 |
 
 反面顺序（常见翻车）：先写 CLI 和报告 → 再想解析 → 最后才发现页面拿不到数据，前面全部白写。
+
+---
+
+## 10. 实现现状与设计偏差
+
+本文写于编码之前。下列差异是实现后回填的，**以本节为准**：
+
+| 设计中的写法 | 实际实现 | 原因 |
+|---|---|---|
+| `Clock` 端口（system / fixed 两个 adapter） | `now` 只是组装函数的参数，默认取 UTC | 单 adapter 的端口是假 seam；测试直接传固定值 |
+| `PageFetcher` + 独立快照存储 | 合并为 `Fetcher.get(url, force=False)`，缓存按 URL 的 sha1 落盘 | 少一层抽象；续跑与审计共用同一处 |
+| 语言判定注入 `LanguageJudge` | 只实现离线规则版，未接模型 | 6 小时内确定性优先（ADR-0007） |
+| 启动前置自检（§2.11） | 未内置，改由 `tools/check-connectivity.sh` 手动执行 | 自检依赖运行环境，内置会让离线测试变复杂 |
+| 无重试编排 | 两层重试：单请求内 2 次 + 整批跑完补跑 `error` | 两次真实运行各出现 1 次 TLS 抖动 |
+| 无清理 / 验收工具 | 新增 `clean.sh`、`collector/verify.py`、`tools/verify_results.py` | 重跑与交付验收需要 |
+
+### 10.1 为什么加自动补跑
+
+腾讯云与华为云两次完整运行各出现过 1 条 `error`：
+
+```
+URLError: [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error
+```
+
+这是 TLS 握手阶段的瞬时失败，与账号无关。处理：
+
+- 单请求内重试 2 次（退避 2s / 4s）；
+- 整批跑完后只对 `error` 补跑一轮；
+- **不重试** `blocked`（对方明确拒绝）、`not_found`、`private`（确定性结果）。
+
+### 10.2 设计模块与实现文件的对应
+
+| 设计 | 实现 |
+|---|---|
+| `run_collection` | `collector/cli.py::main` |
+| `resolve_profile` | `collector/assemble.py::decide_status`（候选生成简化为单一规范 URL） |
+| `parse_profile` | `collector/parse.py` |
+| `PageFetcher` / `SnapshotStore` | `collector/fetch.py::Fetcher` |
+| `assemble` / `validate` / `report` | 同名模块 |
+| 头像 | `collector/avatars.py` |
+
+一句话：**缝的数量没变（抓取 1 处、语言判定 1 处可选），但目录层级比设计图扁平**——单机脚本不值得为分层而分层。

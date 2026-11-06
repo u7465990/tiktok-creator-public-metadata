@@ -1,4 +1,4 @@
-# TikTok 公开元信息采集可行性调研
+﻿# TikTok 公开元信息采集可行性调研
 
 > 调研时间：2026-11-05（Asia/Shanghai）
 > 调研执行者：数据采集可行性调研员（AI agent）
@@ -20,7 +20,7 @@
 - 对 `www.tiktok.com`、`tiktok.com`、`m.tiktok.com` 的抓取尝试全部在**建立连接之前**失败，报错固定为：`Error: URL hostname "www.tiktok.com" resolves to a non-public IP address`；`*.tiktok.com` 四个子域全部命中同一错误。**【实测】**
 - 同一工具抓 `https://example.com` 返回 **HTTP 200**、抓 `https://www.baidu.com` 返回 **HTTP 200**、抓 `https://cn.bing.com/search?...` 返回 **HTTP 200**——**工具与出口网络是通的**，被拦的是特定域名。**【实测】**
 - DNS 解析本身是污染/伪造的：`www.tiktok.com` 两次查询分别得到 `69.171.235.22`（Meta 的 IP 段）和 `174.132.167.252`，另有 `AAAA 2001::1`（Teredo 保留段）；`tiktok.com` 得到 `23.210.26.x`。**同一域名多次查询答案不一致 = 典型 DNS 污染特征**。**【实测】**
-- 出口公网 IP 为 `112.10.196.22`（由 Cloudflare 拦截页回显）。**【实测】**
+- 出口公网 IP 为 `x.x.x.x`（由 Cloudflare 拦截页回显）。**【实测】**
 
 **这意味着：本报告第 2、3 节的"一手实测"任务我无法完成，第 4 节的字段路径也无法用真实 HTML 验证。** 我没有编造页面结构；所有无法验证的内容在正文中一律标注为【未验证】/【社区说法】，并附上"在你自己的机器上 5 分钟内复测"的可执行脚本（见 §11）。
 
@@ -91,7 +91,7 @@
 | `https://example.com` | **HTTP 200**，返回正文 | 抓取工具本身可用 |
 | `https://www.baidu.com` | **HTTP 200** | 出口可访问部分公网 |
 | `https://cn.bing.com/search?q=...` | **HTTP 200**，返回完整 SERP | 可用作检索，但结果为中国区本地化结果，质量差 |
-| `https://tikwm.com/` | **HTTP 403** Cloudflare "Sorry, you have been blocked"，回显 `Your IP: 112.10.196.22` | 第三方站可达，但被 Cloudflare 挡 |
+| `https://tikwm.com/` | **HTTP 403** Cloudflare "Sorry, you have been blocked"，回显 `Your IP: x.x.x.x` | 第三方站可达，但被 Cloudflare 挡 |
 | `https://tikwm.com/api/user/info?unique_id=sr.smits03` | **HTTP 403** 同上 | 第三方 API 同样被挡 |
 | `https://countik.com/` | **HTTP 403** "Just a moment..."（JS 挑战页） | 同上 |
 
@@ -99,7 +99,7 @@
 
 - **我无法在本次环境中回答"无登录能否拿到主页 HTML"**。任何声称"未登录访问返回 200 且含 `__UNIVERSAL_DATA_FOR_REHYDRATION__`"的说法，在本报告中都属于**未验证**，请勿作为事实引用。
 - 可以确认的是：**TikTok 的封禁发生在网络层而非应用层**——说明平台侧之外还存在"环境能否到达"这一前置变量，这在写 README 的"已知限制"时必须提到。
-- 另有一个**间接旁证**：第三方 TikTok 数据站（tikwm、countik）从同一出口 IP 访问时被 Cloudflare 挑战——说明该出口 IP（`112.10.196.22`）信誉一般，**如果这个 IP 去请求 TikTok 主站，拿到 403/验证码的概率显著高于住宅 IP**。这是"限速也没用"的一类失败，必须靠 `blocked` 状态如实上报。**【实测 + 推断】**
+- 另有一个**间接旁证**：第三方 TikTok 数据站（tikwm、countik）从同一出口 IP 访问时被 Cloudflare 挑战——说明该出口 IP（`x.x.x.x`）信誉一般，**如果这个 IP 去请求 TikTok 主站，拿到 403/验证码的概率显著高于住宅 IP**。这是"限速也没用"的一类失败，必须靠 `blocked` 状态如实上报。**【实测 + 推断】**
 
 ### 2.3 你侧 5 分钟复测脚本（把这一步变成可交付证据）
 
