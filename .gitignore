@@ -14,6 +14,7 @@ __pycache__/
 
 # ─── 临时 ───
 out_test/
+.e2e-*
 
 # ─── 截图（含浏览器/系统信息，不入库）───
 tools/guide/*.png

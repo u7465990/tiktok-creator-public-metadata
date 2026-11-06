@@ -1,5 +1,7 @@
 # 达人公开元信息采集（TikTok）
 
+[![tests](https://github.com/u7465990/tiktok-creator-public-metadata/actions/workflows/test.yml/badge.svg)](https://github.com/u7465990/tiktok-creator-public-metadata/actions/workflows/test.yml)
+
 对给定的 100 个 handle，逐条采集**无需登录即可访问**的公开资料，产出 `results.jsonl`、`avatars/`、`report.json`。
 
 - 语言：Python 3.10+，**只用标准库，无第三方依赖**
@@ -173,7 +175,9 @@ TikTok 对"账号不存在"也返回 **HTTP 200**，因此不能只看状态码�
 python3 -m unittest discover -s tests -t . -v
 ```
 
-19 个用例，覆盖题目要求的三类（数字解析、语言结果规范化、异常状态映射），另含真实页面夹具的解析测试（`ok` 与 `not_found` 各一份）。全部离线，不依赖网络。
+25 个用例，覆盖题目要求的三类（数字解析、语言结果规范化、异常状态映射），另有真实页面夹具的解析测试（`ok` / `not_found` / `private` / WAF 各一份）与 **2 个端到端测试**：用真实页面夹具跑完整流程、写出一行合法结果，并验证第二次运行命中缓存、不访问网络。全部离线，不依赖网络。
+
+CI 在多版本 Python（3.10 / 3.12）上自动运行，见 [.github/workflows/test.yml](.github/workflows/test.yml)。
 
 ## 清理与重跑
 
