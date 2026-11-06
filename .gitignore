@@ -17,6 +17,9 @@ out_test/
 .e2e-*
 /.probe-*
 /probe-*
+.audit-cache/
+audit.md
+audit.json
 
 # ─── 截图（含浏览器/系统信息，不入库）───
 tools/guide/*.png

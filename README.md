@@ -207,7 +207,19 @@ python3 tools/verify_results.py
 全部通过：字段合法、状态自洽、来源与头像齐备。
 ```
 
-## 抽样复核方法
+## 抽样复核（20 条）
+
+题目要求抽样复核 20 个账号。自动化做法（在能访问 TikTok 的机器上）：
+
+```bash
+python3 tools/audit_sample.py --sample 20
+```
+
+脚本会：从 `ok` 记录里随机抽 20 条（种子固定，可复现）→ 重新请求主页 → 重新解析 → 与结果文件逐字段比对 `display_name` / `follower_count` / `bio`，输出 `audit.md`（表格）与 `audit.json`（明细）。
+
+粉丝数在两次抓取之间会自然增长，**1% 以内记为"轻微变化"，不算不一致**；复核时已不可访问的账号单独列出，不参与一致率。
+
+手动复核也可以：
 
 1. 取 `results.jsonl` 任意一条 `ok` 记录；
 2. 打开其 `source_urls[0]`；
