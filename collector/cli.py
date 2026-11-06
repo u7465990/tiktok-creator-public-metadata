@@ -4,6 +4,7 @@ import csv
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 
 from .assemble import build_record, decide_status, normalize_handle, profile_url_for
@@ -37,7 +38,36 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--delay", type=float, default=3.0, help="请求间隔秒数（含抖动）")
     p.add_argument("--refresh", action="store_true", help="忽略快照缓存，重新抓取")
     p.add_argument("--no-avatars", action="store_true", help="不下载头像")
+    p.add_argument("--no-retry", action="store_true", help="跑完后不自动补跑 error 记录")
     return p
+
+
+def collect_one(raw, fetcher, avatar_dir, no_avatars, force=False):
+    """采集单条，返回 (record, snapshot)。"""
+    normalized = normalize_handle(raw)
+    snapshot = fetcher.get(profile_url_for(normalized), force=force)
+    status, facts, error = decide_status(snapshot)
+
+    avatar_file = None
+    if facts and facts.avatar_url and not no_avatars:
+        avatar_file, reason = download_avatar(facts.avatar_url, avatar_dir, slugify(normalized))
+        if reason:
+            error = f"{error}；头像下载失败：{reason}" if error else f"头像下载失败：{reason}"
+
+    language, confidence, evidence = detect_language(facts.signature if facts else None)
+    record = build_record(
+        handle=raw,
+        normalized=normalized,
+        snapshot=snapshot,
+        status=status,
+        facts=facts,
+        error=error,
+        language=language,
+        confidence=confidence,
+        evidence=evidence,
+        avatar_file=avatar_file,
+    )
+    return record, snapshot
 
 
 def main(argv=None) -> int:
@@ -68,37 +98,25 @@ def main(argv=None) -> int:
 
     print(f"开始采集：{len(handles)} 条，间隔约 {args.delay}s，输出到 {out_dir}")
     for index, raw in enumerate(handles, start=1):
-        normalized = normalize_handle(raw)
-        url = profile_url_for(normalized)
-
-        snapshot = fetcher.get(url)
-        status, facts, error = decide_status(snapshot)
-
-        avatar_file = None
-        if facts and facts.avatar_url and not args.no_avatars:
-            avatar_file, reason = download_avatar(facts.avatar_url, avatar_dir, slugify(normalized))
-            if reason:
-                error = f"{error}；头像下载失败：{reason}" if error else f"头像下载失败：{reason}"
-
-        bio_text = facts.signature if facts else None
-        language, confidence, evidence = detect_language(bio_text)
-
-        record = build_record(
-            handle=raw,
-            normalized=normalized,
-            snapshot=snapshot,
-            status=status,
-            facts=facts,
-            error=error,
-            language=language,
-            confidence=confidence,
-            evidence=evidence,
-            avatar_file=avatar_file,
-        )
+        record, snapshot = collect_one(raw, fetcher, avatar_dir, args.no_avatars)
         records.append(record)
 
         flag = "缓存" if snapshot.from_cache else "抓取"
-        print(f"[{index}/{len(handles)}] {raw:<32} {status:<10} {flag}")
+        print(f"[{index}/{len(handles)}] {raw:<32} {record['status']:<10} {flag}")
+
+    # 补跑：只重试连接层失败的记录（error），不碰 blocked / not_found / private
+    failed = [i for i, record in enumerate(records) if record["status"] == "error"]
+    if failed and not args.no_retry:
+        print(f"\n自动补跑 {len(failed)} 条 error 记录（间隔 {args.delay}s）…")
+        for i in failed:
+            time.sleep(args.delay)
+            record, snapshot = collect_one(handles[i], fetcher, avatar_dir,
+                                           args.no_avatars, force=True)
+            if record["status"] != "error":
+                records[i] = record
+                print(f"  ↻ {handles[i]:<32} error → {record['status']}")
+            else:
+                print(f"  ↻ {handles[i]:<32} 仍然 error（{record['error']}）")
 
     with open(results_path, "w", encoding="utf-8") as fh:
         for record in records:

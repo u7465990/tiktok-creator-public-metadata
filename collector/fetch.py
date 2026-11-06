@@ -96,8 +96,8 @@ class Fetcher:
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
             return Snapshot(url, 0, "", _now_utc(), error=f"{type(exc).__name__}: {exc}")
 
-    def get(self, url: str) -> Snapshot:
-        if not self.refresh:
+    def get(self, url: str, force: bool = False) -> Snapshot:
+        if not (self.refresh or force):
             cached = self._load(url)
             if cached is not None and cached.status == 200:
                 return cached
@@ -107,13 +107,21 @@ class Fetcher:
             self._sleep()
             snap = self._request(url)
             self._last_request = time.time()
-            if snap.status in (429,) or 500 <= snap.status < 600:
+            if is_transient(snap) and attempt < 2:
                 time.sleep(2 * (attempt + 1))
                 continue
             break
 
         self._save(snap)
         return snap
+
+
+def is_transient(snap: Snapshot) -> bool:
+    """值得重试的失败：连接层错误、限流、对方 5xx。
+
+    403（明确拒绝）与 WAF 挑战页不在此列——那是对方的态度，重试只会更糟。
+    """
+    return snap.status == 0 or snap.status == 429 or 500 <= snap.status < 600
 
 
 def _now_utc() -> str:
