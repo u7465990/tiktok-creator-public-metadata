@@ -17,7 +17,7 @@ git clone <repo-url> && cd creator-public-data-written-test-candidate
 ./run.sh input/creator_handles_100.csv
 ```
 
-> 如果提示 `Permission denied`，先执行一次 `chmod +x run.sh`（在 Windows 上打包的 zip 会丢掉可执行位）。
+> 如果提示 `Permission denied`，先执行一次 `chmod +x run.sh clean.sh`（在 Windows 上打包的 zip 会丢掉可执行位）。
 > Windows 下用 Git Bash 运行同一条命令，或直接 `python -m collector --input input/creator_handles_100.csv --out .`。
 
 等价写法（Windows 或没有 bash 时）：
@@ -175,6 +175,18 @@ python3 -m unittest discover -s tests -t . -v
 
 19 个用例，覆盖题目要求的三类（数字解析、语言结果规范化、异常状态映射），另含真实页面夹具的解析测试（`ok` 与 `not_found` 各一份）。全部离线，不依赖网络。
 
+## 清理与重跑
+
+```bash
+./clean.sh          # 删结果与头像，保留 cache/（重跑约 1 分钟）
+./clean.sh --all    # 连 cache/ 一起删（彻底重来，约 6 分钟）
+./clean.sh -n       # 只打印会删什么，不真删
+```
+
+删除范围：`results.jsonl`、`report.json`、`avatars/`、`out_test/`、`__pycache__`；加 `--all` 时再删 `cache/`。
+
+典型用法：换一份输入做扩展（`./run.sh input/another.csv`），或想从零复现一次完整采集。
+
 ## 一键验收
 
 跑完采集后：
@@ -213,6 +225,7 @@ results.jsonl       交付物
 report.json         交付物
 avatars/            交付物
 run.sh              一键运行入口
+clean.sh            一键清理产物
 input/              题目输入
 schemas/            题目 Schema
 examples/           题目示例
