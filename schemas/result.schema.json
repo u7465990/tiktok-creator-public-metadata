@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/schemas/creator-public-result.schema.json",
+  "title": "Creator public metadata collection result",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "handle",
+    "normalized_handle",
+    "profile_url",
+    "display_name",
+    "avatar_url",
+    "avatar_file",
+    "bio",
+    "follower_count",
+    "language",
+    "language_confidence",
+    "language_evidence",
+    "source_urls",
+    "collected_at",
+    "status",
+    "error"
+  ],
+  "properties": {
+    "handle": { "type": "string", "minLength": 1 },
+    "normalized_handle": { "type": "string", "minLength": 1 },
+    "profile_url": {
+      "anyOf": [
+        { "type": "string", "format": "uri" },
+        { "type": "null" }
+      ]
+    },
+    "display_name": { "type": ["string", "null"] },
+    "avatar_url": {
+      "anyOf": [
+        { "type": "string", "format": "uri" },
+        { "type": "null" }
+      ]
+    },
+    "avatar_file": { "type": ["string", "null"] },
+    "bio": { "type": ["string", "null"] },
+    "follower_count": {
+      "anyOf": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "null" }
+      ]
+    },
+    "language": {
+      "type": "string",
+      "pattern": "^([a-z]{2}|und)$"
+    },
+    "language_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "language_evidence": { "type": ["object", "null"] },
+    "source_urls": {
+      "type": "array",
+      "items": { "type": "string", "format": "uri" },
+      "uniqueItems": true
+    },
+    "collected_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["ok", "not_found", "private", "blocked", "error"]
+    },
+    "error": { "type": ["string", "null"] }
+  }
+}

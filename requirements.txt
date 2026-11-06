@@ -1,0 +1,9 @@
+# 本项目仅使用 Python 标准库，无第三方依赖。
+# 运行要求：Python >= 3.10
+#
+# 安装步骤：
+#   git clone <repo-url> && cd creator-public-data-written-test-candidate
+#   ./run.sh input/creator_handles_100.csv
+#
+# 如需固定版本，可在本文件写入你实际使用的版本，例如：
+#   python==3.12.3

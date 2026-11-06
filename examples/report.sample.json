@@ -1,0 +1,22 @@
+{
+  "input_count": 100,
+  "result_count": 100,
+  "started_at": "2026-01-01T00:00:00Z",
+  "finished_at": "2026-01-01T00:00:00Z",
+  "duration_seconds": 0,
+  "status_counts": {
+    "ok": 0,
+    "not_found": 0,
+    "private": 0,
+    "blocked": 0,
+    "error": 0
+  },
+  "field_coverage": {
+    "avatar_url": 0,
+    "bio": 0,
+    "follower_count": 0,
+    "language": 0
+  },
+  "source_distribution": {},
+  "notes": "Replace sample values with metrics from the actual run."
+}

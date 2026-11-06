@@ -1,0 +1,65 @@
+
+==============================================================
+ TikTok 采集连通性自检（只读，不采集任何数据）
+ 时间：2026-11-06 13:06:51   主机：VM-0-16-ubuntu
+==============================================================
+
+  [PASS] curl 可用                    curl 8.18.0 (x86_64-pc-linux-gnu) libcurl/8.18.0 OpenSSL/3.5.5 zlib/1.3.1 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.2 libssh2/1.11.1 nghttp2/1.68.0 librtmp/2.3 mit-krb5/1.22.1 OpenLDAP/2.6.10
+-- 1. 对照组（证明不是工具/网络整体坏了）--
+  [PASS] 对照组 example.com          HTTP 200，577 字节
+
+-- 2. DNS 解析 --
+  [PASS] DNS 解析 www.tiktok.com      2.17.106.164 2.17.106.165 2.17.106.167 2.17.106.168 2.17.106.178 2.17.106.179 2.17.106.180 2.17.106.181 2.17.106.182 
+
+-- 3. 主页探针（无登录）--
+  请求：https://www.tiktok.com/@tiktok
+  [PASS] HTTP 请求                    HTTP 200，1485 字节，0.041946s
+  [PASS] 是否跳登录                未跳转，最终地址：https://www.tiktok.com/@tiktok
+  [PASS] 验证码 / CF 挑战          未检测到验证码标记
+  [WARN] 结构化数据 UNIVERSAL      未找到内嵌 JSON（可能靠 DOM/og 标签）
+  [FAIL] 关键字段                   未找到粉丝数/展示名字段
+  [WARN] 页面体积                   仅 1485 字节，疑似软拦截空壳页
+
+-- 4. 不存在的账号（确认 404 还是 200+文案）--
+  [INFO] 不存在账号的返回       HTTP 200；含未找到文案：1
+
+-- 5. robots.txt --
+    User-agent: Baiduspider
+    User-agent: 360Spider
+    User-agent: Sogouspider
+    User-agent: Yisouspider
+    User-agent: PetalBot
+    User-agent: GPTBot
+    User-agent: OAI-SearchBot
+    User-agent: anthropic-ai
+    User-agent: ClaudeBot
+    User-agent: PerplexityBot
+    User-agent: Google-Extended
+    User-agent: Applebot-Extended
+    User-agent: meta-externalagent
+    User-agent: DuckAssistBot
+    User-agent: ChatGPT-User
+    User-agent: Gemini-Deep-Research
+    User-agent: GoogleAgent-Mariner
+    User-agent: Google-NotebookLM
+    User-agent: CCBot
+    User-agent: Claude-User
+    User-agent: Claude-SearchBot
+    User-agent: Perplexity-User
+    User-agent: AI2Bot
+    User-agent: MistralAI-User
+    User-agent: Bytespider
+    Disallow: /
+    User-agent: *
+    Allow: /foryou
+    Allow: /discover
+    Allow: /about
+  [WARN] robots 是否允许 /@         "/" 被 Disallow 且无 Allow: /@ → 程序应记 blocked(robots_disallow)
+
+-- 结论 --
+  判定：页面可访问但未找到数据（疑似改版或软拦截）
+  → 保存的页面在 check-output/profile.body.html，发回来人工看一下。
+
+  产物目录：/home/ubuntu/check-output
+  （report + 抓到的页面原文；不含任何 Cookie/凭据）
+  注意：robots 可能禁止主页抓取，程序里要做守卫并如实记 blocked。

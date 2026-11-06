@@ -1,0 +1,19 @@
+# ─── 采集产物：不入库（含真实用户公开资料，且体积较大）───
+results.jsonl
+report.json
+avatars/
+cache/
+tools/check-output/
+tools/captured/probe-html/
+tools/captured/probe-status/
+*.tgz
+
+# ─── Python ───
+__pycache__/
+*.py[cod]
+
+# ─── 临时 ───
+out_test/
+
+# ─── 截图（含浏览器/系统信息，不入库）───
+tools/guide/*.png
