@@ -38,6 +38,15 @@ _STOPWORDS = {
 }
 
 
+# 强标记词：在目标语言里高频、在其他语言里极少出现。
+# 允许"≥3 个词 + 命中 1 个"直接判定，以覆盖 "Living the American Dream" 这类短句；
+# 但置信度上限压到 0.5，避免与多信号判定同权。
+_STRONG_MARKERS = {
+    "en": {"the", "and", "is", "are", "you", "your", "this", "that",
+           "with", "have", "my", "was", "were", "don't", "it's"},
+}
+
+
 def detect_language(bio: Optional[str]) -> Tuple[str, float, Optional[dict]]:
     """返回 (language, confidence, evidence)。证据不足时返回 ('und', 低置信, evidence)。"""
     if not bio or not bio.strip():
@@ -56,8 +65,18 @@ def detect_language(bio: Optional[str]) -> Tuple[str, float, Optional[dict]]:
             confidence = min(0.95, 0.6 + 0.05 * hits)
             return code, round(confidence, 2), evidence
 
-    # 2) 拉丁字母：停用词投票
-    words = set(re.findall(r"[a-zA-ZÀ-ÿ']+", text.lower()))
+    # 2) 强标记词：这类词几乎只出现在单一语言里，允许单次命中即判定
+    tokens = re.findall(r"[a-zA-ZÀ-ÿ']+", text.lower())
+    if len(tokens) >= 3:
+        for code, markers in _STRONG_MARKERS.items():
+            hits = sorted(set(tokens) & markers)
+            if hits:
+                evidence["method"] = "strong-marker"
+                evidence["notes"] = f"{code} 强标记词 {hits}（tokens={len(tokens)}）"
+                return code, 0.5, evidence
+
+    # 3) 拉丁字母：停用词投票（弱信号，需要多次命中互相印证）
+    words = set(tokens)
     scores = {code: len(words & bag) for code, bag in _STOPWORDS.items()}
     ranked = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
     best_code, best = ranked[0]

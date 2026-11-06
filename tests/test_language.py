@@ -18,6 +18,24 @@ class TestDetectLanguage(unittest.TestCase):
         self.assertEqual(detect_language("Your next discovery is waiting on TikTok")[0], "en")
         self.assertEqual(detect_language("Mi vida y mi amor")[0], "es")
 
+    def test_strong_marker_allows_single_hit(self):
+        # 只命中 "the"，但文本够长且该词几乎只出现在英语里
+        for text in ("Living the American Dream",
+                     "All the fun things!!",
+                     "Year 2 of the Summer League"):
+            code, confidence, evidence = detect_language(text)
+            self.assertEqual(code, "en", text)
+            self.assertEqual(evidence["method"], "strong-marker")
+            self.assertLessEqual(confidence, 0.5)
+
+    def test_strong_marker_needs_enough_tokens(self):
+        self.assertEqual(detect_language("the")[0], "und")
+        self.assertEqual(detect_language("my")[0], "und")
+
+    def test_strong_marker_does_not_hijack_spanish(self):
+        # 西语里没有 the/and/my 这类词，不应被强标记词规则吃掉
+        self.assertEqual(detect_language("Mi vida y mi amor")[0], "es")
+
     def test_insufficient_evidence_stays_und(self):
         code, confidence, evidence = detect_language("hi")
         self.assertEqual(code, "und")
