@@ -12,6 +12,20 @@
 
 ---
 
+## 环境要求
+
+| 项 | 要求 | 说明 |
+|---|---|---|
+| 操作系统 | **Linux / macOS** | 需要 bash 运行 `run.sh` / `clean.sh`；Windows 用 Git Bash，或直接 `python -m collector --input ... --out .` |
+| Python | **3.10 及以上** | 只用标准库，**无需 `pip install`** |
+| 网络 | **能直接访问 `www.tiktok.com`** | 中国大陆家庭宽带因 DNS 污染不可用；本次在境外云服务器（新加坡）运行 |
+| 磁盘 | 约 50MB | 100 张头像 + 抓取快照缓存 |
+| 脚本权限 | `run.sh`、`clean.sh` 可执行 | 仓库已保留可执行位（`100755`）；若 zip 打包丢失，执行 `chmod +x run.sh clean.sh` |
+
+依赖说明：本项目**没有第三方依赖**，因此不存在需要锁定的包版本。`pyproject.toml` 声明 `requires-python >= 3.10`，`requirements.txt` 与 `requirements.lock` 为空清单，用来明确"零依赖"这件事。
+
+---
+
 ## 快速开始
 
 ```bash
@@ -242,6 +256,9 @@ report.json         交付物
 avatars/            交付物
 run.sh              一键运行入口
 clean.sh            一键清理产物
+pyproject.toml      工程元数据（requires-python >= 3.10，零依赖）
+requirements.txt    依赖说明
+requirements.lock   依赖锁文件（空清单，明确零依赖）
 input/              题目输入
 schemas/            题目 Schema
 examples/           题目示例

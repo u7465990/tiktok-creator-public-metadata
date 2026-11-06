@@ -1,0 +1,7 @@
+# 依赖锁文件
+#
+# 本项目仅使用 Python 标准库（urllib / json / re / csv 等），
+# 没有任何第三方包，因此本文件为空。
+#
+# 运行时要求：CPython >= 3.10（见 pyproject.toml 的 requires-python）。
+# 若将来引入第三方包，请在此处按 `name==version` 逐行锁定。
